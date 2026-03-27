@@ -459,10 +459,10 @@ public abstract class DrawerActivity extends ToolbarActivity
     }
 
     private void setupSidebarQuotaElement() {
-        mSidebarQuotaView = (LinearLayout) findSidebarQuotaViewById(R.id.drawer_quota);
-        mSidebarQuotaProgressBar = (LinearProgressIndicator) findSidebarQuotaViewById(R.id.drawer_quota_ProgressBar);
-        mSidebarQuotaTextPercentage = (TextView) findSidebarQuotaViewById(R.id.drawer_quota_percentage);
-        mSidebarQuotaTextLink = (TextView) findSidebarQuotaViewById(R.id.drawer_quota_link);
+        mSidebarQuotaView = (LinearLayout) findSidebarQuotaViewById(R.id.sidebar_quota);
+        mSidebarQuotaProgressBar = (LinearProgressIndicator) findSidebarQuotaViewById(R.id.sidebar_quota_ProgressBar);
+        mSidebarQuotaTextPercentage = (TextView) findSidebarQuotaViewById(R.id.sidebar_quota_percentage);
+        mSidebarQuotaTextLink = (TextView) findSidebarQuotaViewById(R.id.sidebar_quota_link);
         viewThemeUtils.material.colorProgressBar(mSidebarQuotaProgressBar, ColorRole.PRIMARY);
         mSidebarQuotaProgressBar.setTrackStopIndicatorSize(0);
         viewThemeUtils.platform.colorViewBackground(mSidebarQuotaView);

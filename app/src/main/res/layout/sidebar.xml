@@ -22,7 +22,7 @@
     app:menu="@menu/partial_drawer_entries">
 
     <LinearLayout
-        android:id="@+id/drawer_quota"
+        android:id="@+id/sidebar_quota"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -37,13 +37,13 @@
         tools:visibility="visible">
 
         <TextView
-            android:id="@+id/drawer_quota_link"
+            android:id="@+id/sidebar_quota_link"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="@dimen/alternate_half_padding" />
 
         <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/drawer_quota_ProgressBar"
+            android:id="@+id/sidebar_quota_ProgressBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:indeterminate="false"
@@ -54,7 +54,7 @@
             tools:progress="50" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/drawer_quota_percentage"
+            android:id="@+id/sidebar_quota_percentage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:drawablePadding="@dimen/alternate_half_padding"
