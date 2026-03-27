@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Nextcloud - Android Client
+-->
+<resources>
+    <bool name="is_support_drawer">false</bool>
+</resources>

@@ -8,4 +8,5 @@
 -->
 <resources>
     <bool name="show_push_warning">true</bool>
+    <bool name="is_support_drawer">true</bool>
 </resources>

@@ -394,6 +394,13 @@ class FileDisplayActivity :
                 }
             }
         }
+
+        if (isDrawerLayout) {
+            mMenuButton.visibility = View.VISIBLE
+        } else {
+            mMenuButton.visibility = View.GONE
+        }
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {

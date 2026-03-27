@@ -185,6 +185,22 @@ public abstract class DrawerActivity extends ToolbarActivity
     private TextView mQuotaTextLink;
 
     /**
+     * container layout of the quota view on sidebar.
+     */
+    private LinearLayout mSidebarQuotaView;
+
+    /**
+     * progress bar of the quota view on sidebar.
+     */
+    private LinearProgressIndicator mSidebarQuotaProgressBar;
+
+    /**
+     * text view of the quota view on sidebar.
+     */
+    private TextView mSidebarQuotaTextPercentage;
+    private TextView mSidebarQuotaTextLink;
+
+    /**
      * runnable that will be executed after the drawer has been closed.
      */
     private Runnable pendingRunnable;
@@ -194,6 +210,9 @@ public abstract class DrawerActivity extends ToolbarActivity
 
     private BottomNavigationView bottomNavigationView;
     private NavigationView drawerNavigationView;
+
+    private View mSidebarMenu;
+    private NavigationView sidebarNavigationView;
 
     /**
      * Returns the navigation drawer menu item ID that represents
@@ -243,8 +262,16 @@ public abstract class DrawerActivity extends ToolbarActivity
             mDrawerLayout = findViewById(R.id.drawer_layout);
         }
 
+        if (mSidebarMenu == null) {
+            mSidebarMenu = findViewById(R.id.sidebar_menu);
+        }
+
         if (drawerNavigationView == null) {
             drawerNavigationView = findViewById(R.id.nav_view);
+        }
+
+        if (mSidebarMenu != null && sidebarNavigationView == null) {
+            sidebarNavigationView = mSidebarMenu.findViewById(R.id.sidebar_view);
         }
 
         if (drawerNavigationView != null) {
@@ -255,16 +282,23 @@ public abstract class DrawerActivity extends ToolbarActivity
             updateHeader();
 
             setupDrawerMenu(drawerNavigationView);
-            getAndDisplayUserQuota();
             setupQuotaElement();
-            highlightNavigationViewItem(id);
         }
+
+        if (sidebarNavigationView != null) {
+            viewThemeUtils.files.colorNavigationView(sidebarNavigationView);
+
+            // Setting up drawer header
+            mNavigationViewHeader = sidebarNavigationView.getHeaderView(0);
+            updateHeader();
+
+            setupSidebarMenu(sidebarNavigationView);
+            setupSidebarQuotaElement();
+        }
+        getAndDisplayUserQuota();
+        highlightNavigationViewItem(id);
 
         setupDrawerToggle();
-
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
 
         if (bottomNavigationView == null) {
             bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -276,6 +310,12 @@ public abstract class DrawerActivity extends ToolbarActivity
             handleBottomNavigationViewClicks();
             highlightNavigationViewItem(id);
         }
+
+        if (!isDrawerLayout() && mMenuButton != null) {
+            mMenuButton.setVisibility(View.GONE);
+        }
+
+        hideOrShowSidebar();
     }
 
     /**
@@ -301,6 +341,15 @@ public abstract class DrawerActivity extends ToolbarActivity
         if (drawerNavigationView != null) {
             NavigationViewExtensionsKt.unsetAllNavigationItems(drawerNavigationView);
             MenuItem menuItem = drawerNavigationView.getMenu().findItem(menuItemId);
+
+            if (menuItem != null && !menuItem.isChecked()) {
+                menuItem.setChecked(true);
+            }
+        }
+
+        if (sidebarNavigationView != null) {
+            NavigationViewExtensionsKt.unsetAllNavigationItems(sidebarNavigationView);
+            MenuItem menuItem = sidebarNavigationView.getMenu().findItem(menuItemId);
 
             if (menuItem != null && !menuItem.isChecked()) {
                 menuItem.setChecked(true);
@@ -407,6 +456,16 @@ public abstract class DrawerActivity extends ToolbarActivity
         viewThemeUtils.material.colorProgressBar(mQuotaProgressBar, ColorRole.PRIMARY);
         mQuotaProgressBar.setTrackStopIndicatorSize(0);
         viewThemeUtils.platform.colorViewBackground(mQuotaView);
+    }
+
+    private void setupSidebarQuotaElement() {
+        mSidebarQuotaView = (LinearLayout) findSidebarQuotaViewById(R.id.drawer_quota);
+        mSidebarQuotaProgressBar = (LinearProgressIndicator) findSidebarQuotaViewById(R.id.drawer_quota_ProgressBar);
+        mSidebarQuotaTextPercentage = (TextView) findSidebarQuotaViewById(R.id.drawer_quota_percentage);
+        mSidebarQuotaTextLink = (TextView) findSidebarQuotaViewById(R.id.drawer_quota_link);
+        viewThemeUtils.material.colorProgressBar(mSidebarQuotaProgressBar, ColorRole.PRIMARY);
+        mSidebarQuotaProgressBar.setTrackStopIndicatorSize(0);
+        viewThemeUtils.platform.colorViewBackground(mSidebarQuotaView);
     }
 
     public void updateHeader() {
@@ -586,6 +645,17 @@ public abstract class DrawerActivity extends ToolbarActivity
         filterDrawerMenu(navigationView.getMenu(), account);
     }
 
+    private void setupSidebarMenu(NavigationView navigationView) {
+        navigationView.setNavigationItemSelectedListener(
+            menuItem -> {
+                onNavigationItemClicked(menuItem);
+                return true;
+        });
+
+        User account = accountManager.getUser();
+        filterDrawerMenu(navigationView.getMenu(), account);
+    }
+
     private void filterDrawerMenu(final Menu menu, @NonNull final User user) {
         final var optionalCapability = getCapabilities();
         if (optionalCapability.isPresent()) {
@@ -606,6 +676,10 @@ public abstract class DrawerActivity extends ToolbarActivity
     // region navigation item click
     private void onNavigationItemClicked(final MenuItem menuItem) {
         int itemId = menuItem.getItemId();
+
+        if (itemId == getMenuItemId()) {
+            return;
+        }
 
         if (itemId == R.id.nav_all_files || itemId == R.id.nav_personal_files) {
             closeDrawer();
@@ -903,8 +977,14 @@ public abstract class DrawerActivity extends ToolbarActivity
     private void showQuota(boolean showQuota) {
         if (showQuota) {
             mQuotaView.setVisibility(View.VISIBLE);
+            if (mSidebarQuotaView != null) {
+                mSidebarQuotaView.setVisibility(View.VISIBLE);
+            }
         } else {
             mQuotaView.setVisibility(View.GONE);
+            if (mSidebarQuotaView != null) {
+                mSidebarQuotaView.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -921,22 +1001,49 @@ public abstract class DrawerActivity extends ToolbarActivity
             mQuotaTextPercentage.setText(String.format(
                 getString(R.string.drawer_quota_unlimited),
                 DisplayUtils.bytesToHumanReadable(usedSpace)));
+
+            if (mSidebarQuotaTextPercentage != null) {
+                mSidebarQuotaTextPercentage.setText(String.format(
+                    getString(R.string.drawer_quota_unlimited),
+                    DisplayUtils.bytesToHumanReadable(usedSpace)));
+            }
         } else {
             mQuotaTextPercentage.setText(String.format(
                 getString(R.string.drawer_quota),
                 DisplayUtils.bytesToHumanReadable(usedSpace),
                 DisplayUtils.bytesToHumanReadable(totalSpace)));
+
+            if (mSidebarQuotaTextPercentage != null) {
+                mSidebarQuotaTextPercentage.setText(String.format(
+                    getString(R.string.drawer_quota),
+                    DisplayUtils.bytesToHumanReadable(usedSpace),
+                    DisplayUtils.bytesToHumanReadable(totalSpace)));
+            }
         }
 
         mQuotaProgressBar.setProgress(relative);
 
+        if (mSidebarQuotaProgressBar != null) {
+            mSidebarQuotaProgressBar.setProgress(relative);
+        }
+
         if (relative < RELATIVE_THRESHOLD_WARNING) {
             viewThemeUtils.material.colorProgressBar(mQuotaProgressBar, ColorRole.PRIMARY);
+            if (mSidebarQuotaProgressBar != null) {
+                viewThemeUtils.material.colorProgressBar(mSidebarQuotaProgressBar, ColorRole.PRIMARY);
+            }
         } else {
             viewThemeUtils.material.colorProgressBar(
                 mQuotaProgressBar,
                 getResources().getColor(R.color.infolevel_warning, null)
                                                     );
+
+            if (mSidebarQuotaProgressBar != null) {
+                viewThemeUtils.material.colorProgressBar(
+                    mSidebarQuotaProgressBar,
+                    getResources().getColor(R.color.infolevel_warning, null)
+                                                        );
+            }
         }
 
         updateQuotaLink();
@@ -944,15 +1051,15 @@ public abstract class DrawerActivity extends ToolbarActivity
     }
 
     private void updateQuotaLink() {
-        if (mQuotaTextLink != null) {
-            if (MDMConfig.INSTANCE.externalSiteSupport(this)) {
-                List<ExternalLink> quotas = externalLinksProvider.getExternalLink(ExternalLinkType.QUOTA);
+        if (MDMConfig.INSTANCE.externalSiteSupport(this)) {
+            List<ExternalLink> quotas = externalLinksProvider.getExternalLink(ExternalLinkType.QUOTA);
 
-                float density = getResources().getDisplayMetrics().density;
-                final int size = Math.round(24 * density);
+            float density = getResources().getDisplayMetrics().density;
+            final int size = Math.round(24 * density);
 
-                if (!quotas.isEmpty()) {
-                    final ExternalLink firstQuota = quotas.get(0);
+            if (!quotas.isEmpty()) {
+                final ExternalLink firstQuota = quotas.get(0);
+                if (mQuotaTextLink != null) {
                     mQuotaTextLink.setText(firstQuota.getName());
                     mQuotaTextLink.setClickable(true);
                     mQuotaTextLink.setVisibility(View.VISIBLE);
@@ -973,11 +1080,46 @@ public abstract class DrawerActivity extends ToolbarActivity
                                                             R.drawable.ic_link);
                         return Unit.INSTANCE;
                     });
-                } else {
-                    mQuotaTextLink.setVisibility(View.GONE);
+                }
+                if (mSidebarQuotaTextLink != null) {
+                    mSidebarQuotaTextLink.setText(firstQuota.getName());
+                    mSidebarQuotaTextLink.setClickable(true);
+                    mSidebarQuotaTextLink.setVisibility(View.VISIBLE);
+                    mSidebarQuotaTextLink.setOnClickListener(v -> {
+                        Intent externalWebViewIntent = new Intent(getApplicationContext(), ExternalSiteWebView.class);
+                        externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, firstQuota.getName());
+                        externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, firstQuota.getUrl());
+                        externalWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, true);
+                        startActivity(externalWebViewIntent);
+                    });
+
+                    Target<Drawable> quotaTarget = createQuotaDrawableTarget(size, mSidebarQuotaTextLink);
+                    getClientRepository().getNextcloudClient(nextcloudClient -> {
+                        GlideHelper.INSTANCE.loadIntoTarget(this,
+                                                            nextcloudClient,
+                                                            firstQuota.getIconUrl(),
+                                                            quotaTarget,
+                                                            R.drawable.ic_link);
+                        return Unit.INSTANCE;
+                    });
                 }
             } else {
+                if (mQuotaTextLink != null) {
+                    mQuotaTextLink.setVisibility(View.GONE);
+                }
+
+                if (mSidebarQuotaTextLink != null) {
+                    mSidebarQuotaTextLink.setVisibility(View.GONE);
+                }
+
+            }
+        } else {
+            if (mQuotaTextLink != null) {
                 mQuotaTextLink.setVisibility(View.GONE);
+            }
+
+            if (mSidebarQuotaTextLink != null) {
+                mSidebarQuotaTextLink.setVisibility(View.GONE);
             }
         }
     }
@@ -1189,6 +1331,29 @@ public abstract class DrawerActivity extends ToolbarActivity
         if (mDrawerToggle != null) {
             mDrawerToggle.onConfigurationChanged(newConfig);
         }
+
+        hideOrShowSidebar();
+    }
+
+    private void hideOrShowSidebar() {
+        if (isDrawerLayout()) {
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            }
+
+            if (mSidebarMenu != null) {
+                mSidebarMenu.setVisibility(View.GONE);
+            }
+        } else {
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            }
+
+            if (mSidebarMenu != null) {
+                mSidebarMenu.setVisibility(View.VISIBLE);
+            }
+            closeDrawer();
+        }
     }
 
     public void addOnBackPressedCallback() {
@@ -1248,6 +1413,22 @@ public abstract class DrawerActivity extends ToolbarActivity
      */
     private View findQuotaViewById(int id) {
         View v = ((NavigationView) findViewById(R.id.nav_view)).getHeaderView(0).findViewById(id);
+
+        if (v != null) {
+            return v;
+        } else {
+            return findViewById(id);
+        }
+    }
+
+    /**
+     * Quota view can be either at navigation bottom or header on sidebar
+     *
+     * @param id the view's id
+     * @return The view if found or <code>null</code> otherwise.
+     */
+    private View findSidebarQuotaViewById(int id) {
+        View v = ((NavigationView) findViewById(R.id.sidebar_view)).getHeaderView(0).findViewById(id);
 
         if (v != null) {
             return v;
@@ -1506,5 +1687,9 @@ public abstract class DrawerActivity extends ToolbarActivity
             menuItemId == R.id.nav_on_device ||
             menuItemId == R.id.nav_recently_modified ||
             menuItemId == R.id.nav_gallery;
+    }
+
+    protected boolean isDrawerLayout() {
+        return getResources().getBoolean(R.bool.is_support_drawer);
     }
 }
