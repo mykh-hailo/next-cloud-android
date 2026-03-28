@@ -976,12 +976,16 @@ public abstract class DrawerActivity extends ToolbarActivity
      */
     private void showQuota(boolean showQuota) {
         if (showQuota) {
-            mQuotaView.setVisibility(View.VISIBLE);
+            if (mQuotaView != null) {
+                mQuotaView.setVisibility(View.VISIBLE);
+            }
             if (mSidebarQuotaView != null) {
                 mSidebarQuotaView.setVisibility(View.VISIBLE);
             }
         } else {
-            mQuotaView.setVisibility(View.GONE);
+            if (mQuotaView != null) {
+                mQuotaView.setVisibility(View.GONE);
+            }
             if (mSidebarQuotaView != null) {
                 mSidebarQuotaView.setVisibility(View.GONE);
             }
@@ -998,9 +1002,11 @@ public abstract class DrawerActivity extends ToolbarActivity
      */
     private void setQuotaInformation(long usedSpace, long totalSpace, int relative, long quotaValue) {
         if (GetUserInfoRemoteOperation.SPACE_UNLIMITED == quotaValue) {
-            mQuotaTextPercentage.setText(String.format(
-                getString(R.string.drawer_quota_unlimited),
-                DisplayUtils.bytesToHumanReadable(usedSpace)));
+            if (mQuotaTextPercentage != null) {
+                mQuotaTextPercentage.setText(String.format(
+                    getString(R.string.drawer_quota_unlimited),
+                    DisplayUtils.bytesToHumanReadable(usedSpace)));
+            }
 
             if (mSidebarQuotaTextPercentage != null) {
                 mSidebarQuotaTextPercentage.setText(String.format(
@@ -1008,10 +1014,12 @@ public abstract class DrawerActivity extends ToolbarActivity
                     DisplayUtils.bytesToHumanReadable(usedSpace)));
             }
         } else {
-            mQuotaTextPercentage.setText(String.format(
-                getString(R.string.drawer_quota),
-                DisplayUtils.bytesToHumanReadable(usedSpace),
-                DisplayUtils.bytesToHumanReadable(totalSpace)));
+            if (mQuotaTextPercentage != null) {
+                mQuotaTextPercentage.setText(String.format(
+                    getString(R.string.drawer_quota),
+                    DisplayUtils.bytesToHumanReadable(usedSpace),
+                    DisplayUtils.bytesToHumanReadable(totalSpace)));
+            }
 
             if (mSidebarQuotaTextPercentage != null) {
                 mSidebarQuotaTextPercentage.setText(String.format(
@@ -1021,22 +1029,28 @@ public abstract class DrawerActivity extends ToolbarActivity
             }
         }
 
-        mQuotaProgressBar.setProgress(relative);
+        if (mQuotaProgressBar != null) {
+            mQuotaProgressBar.setProgress(relative);
+        }
 
         if (mSidebarQuotaProgressBar != null) {
             mSidebarQuotaProgressBar.setProgress(relative);
         }
 
         if (relative < RELATIVE_THRESHOLD_WARNING) {
-            viewThemeUtils.material.colorProgressBar(mQuotaProgressBar, ColorRole.PRIMARY);
+            if (mQuotaProgressBar != null) {
+                viewThemeUtils.material.colorProgressBar(mQuotaProgressBar, ColorRole.PRIMARY);
+            }
             if (mSidebarQuotaProgressBar != null) {
                 viewThemeUtils.material.colorProgressBar(mSidebarQuotaProgressBar, ColorRole.PRIMARY);
             }
         } else {
-            viewThemeUtils.material.colorProgressBar(
-                mQuotaProgressBar,
-                getResources().getColor(R.color.infolevel_warning, null)
-                                                    );
+            if (mQuotaProgressBar != null) {
+                viewThemeUtils.material.colorProgressBar(
+                    mQuotaProgressBar,
+                    getResources().getColor(R.color.infolevel_warning, null)
+                                                        );
+            }
 
             if (mSidebarQuotaProgressBar != null) {
                 viewThemeUtils.material.colorProgressBar(
