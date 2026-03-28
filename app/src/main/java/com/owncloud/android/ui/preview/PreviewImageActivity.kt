@@ -245,7 +245,10 @@ class PreviewImageActivity :
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId != android.R.id.home) {
-            return super.onOptionsItemSelected(item)
+            // Keep scroll button of the FileDisplayActivity on Back Press
+            sendRefreshSearchEventBroadcast()
+            onBackPressedDispatcher.onBackPressed()
+            return true
         }
 
         sendRefreshSearchEventBroadcast()
