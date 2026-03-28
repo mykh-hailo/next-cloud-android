@@ -1066,6 +1066,9 @@ class FileDisplayActivity :
     private fun exitSelectionMode() {
         val ocFileListFragment = this.listOfFilesFragment
         ocFileListFragment?.exitSelectionMode()
+
+        // Update
+        updateActionBarTitleAndHomeButton(currentDir)
     }
 
     private fun requestUploadOfFilesFromFileSystem(data: Intent, resultCode: Int) {
